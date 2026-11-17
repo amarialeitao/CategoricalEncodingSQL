@@ -1,42 +1,53 @@
-# Projeto de Análise de Câncer de Mama - Categorização e Codificação em SQL
+# Breast Cancer Data Analysis: Categorization and Encoding in SQL
 
-Este projeto visa realizar uma análise detalhada da base de dados sobre câncer de mama, utilizando técnicas avançadas de manipulação e transformação de dados em SQL. Abaixo, detalho o processo passo a passo:
+This project prepares a breast cancer dataset for analysis using data transformation techniques in SQL. The process is described step by step below.
 
-## Extração e Preparação dos Dados
+## Data Extraction and Preparation
 
-Dados sobre câncer de mama foram obtidos do [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/dataset/14/breast+cancer).   
+The breast cancer data comes from the [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/dataset/14/breast+cancer).
 
-O arquivo original no formato .data foi convertido para .csv para facilitar a importação e adicionado um cabeçalho com os títulos das colunas.
+The original `.data` file was converted to `.csv` for easier import, and a header row with the column names was added.
 
-Uma tabela foi criada no MySQL, traduzindo os nomes das colunas para o português.
+A table was created in MySQL, with the column names translated into Portuguese.
 
-## Transformações e Manipulações
-1. Binarização da Coluna 'Classe':
+## Transformations
 
-A binarização é uma técnica que transforma variáveis categóricas em valores binários (0 ou 1). Neste contexto, a coluna 'Classe' foi binarizada para representar duas classes distintas do câncer de mama: 'no-recurrence-events' foi convertido para 0 e 'recurrence-events' para 1. Isso simplifica a análise ao associar valores numéricos às diferentes categorias, permitindo uma interpretação mais direta dos dados.
+1. **Binarization of the 'Classe' (class) column**
 
-2. Binarização da Coluna 'Irradiando':
-   
-Semelhante à binarização da 'Classe', a coluna 'Irradiando' foi binarizada para converter valores 'no' em 0 e 'yes' em 1. Essa abordagem facilita a compreensão e utilização desses dados em algoritmos e visualizações, onde valores binários são frequentemente mais convenientes.
+   Binarization turns categorical variables into binary values (0 or 1). Here, the 'Classe' column was binarized to represent the two breast cancer classes: 'no-recurrence-events' became 0 and 'recurrence-events' became 1. Mapping categories to numbers makes the data easier to interpret and analyze.
 
-3. Label Encoding da Coluna 'Node_Caps':
-   
-O Label Encoding é uma técnica que atribui rótulos numéricos a categorias distintas em uma variável. Na 'Node_Caps', que possui três possíveis valores ('no', 'yes' e valores ausentes), foi aplicado o Label Encoding, onde 'no' recebeu o rótulo 0, 'yes' recebeu o rótulo 1, e valores ausentes foram codificados como 2. Essa estratégia preserva a informação dos valores ausentes e os mantém úteis na análise.
+2. **Binarization of the 'Irradiando' (irradiated) column**
 
-4. Categorização da Variável 'Seio':
-   
-A Categorização é a atribuição de rótulos a diferentes categorias, geralmente utilizada para simplificar variáveis. Na variável 'Seio', os valores 'left' foram transformados em 'E' e 'right' em 'D' através da cláusula CASE. Essa abordagem torna mais claro o significado desses valores, facilitando a interpretação dos dados.
+   In the same way, 'no' values became 0 and 'yes' values became 1. Binary values are often more convenient for algorithms and visualizations.
 
-5. Recategorização da Variável 'Tamanho_Tumor':
-   
-A Recategorização é a reorganização de categorias existentes em uma variável. Na 'Tamanho_Tumor', originalmente com 11 categorias, foi tomada a decisão estratégica de criar 6 novas categorias ('muito pequeno', 'pequeno', 'medio', 'grande', 'muito grande' e 'tratamento urgente'). Essa simplificação auxilia na visualização e compreensão da informação contida nessa coluna.
+3. **Label encoding of the 'Node_Caps' column**
 
-6. Label Encoding da Variável 'Quadrante':
-    
-Assim como na 'Node_Caps', a variável 'Quadrante' passou pelo processo de Label Encoding. Cada quadrante foi mapeado para números de 1 a 5, com o quadrante central representado como 5. Valores nulos foram tratados como 0, mantendo sua relevância na análise.
+   Label encoding assigns a numeric label to each category of a variable. 'Node_Caps' has three possible values ('no', 'yes' and missing): 'no' became 0, 'yes' became 1 and missing values became 2. This keeps the information about missing values usable in the analysis.
 
-## Query Final e Exportação
+4. **Categorization of the 'Seio' (breast side) variable**
 
-Foi elaborada uma query abrangente, reunindo todas as transformações realizadas durante o processo. Essa query não apenas incorpora as mudanças efetuadas nas etapas anteriores, mas também serve como uma ferramenta essencial para a inserção desses dados em uma nova tabela.     
+   Categorization assigns labels to categories, usually to simplify a variable. Using a `CASE` clause, 'left' became 'E' (esquerdo) and 'right' became 'D' (direito), making the values clearer for the Portuguese-language table.
 
-Posteriormente, essa tabela foi exportada para um arquivo CSV, consolidando assim a base de dados com todas as alterações efetuadas. Esse arquivo CSV representa uma versão modificada e otimizada dos dados sobre câncer de mama, pronta para análises mais aprofundadas e compatível com diversas ferramentas de visualização de dados.
+5. **Recategorization of the 'Tamanho_Tumor' (tumor size) variable**
+
+   Recategorization reorganizes the existing categories of a variable. 'Tamanho_Tumor' originally had 11 categories, which were grouped into 6 new ones: 'muito pequeno' (very small), 'pequeno' (small), 'medio' (medium), 'grande' (large), 'muito grande' (very large) and 'tratamento urgente' (urgent treatment). This makes the column easier to visualize and understand.
+
+6. **Label encoding of the 'Quadrante' (quadrant) variable**
+
+   As with 'Node_Caps', each quadrant was mapped to a number from 1 to 5, with the central quadrant as 5. Null values were encoded as 0 so they remain part of the analysis.
+
+## Final Query and Export
+
+A final query brings all the transformations together and is used to insert the transformed data into a new table.
+
+That table was then exported to a CSV file: a cleaned and encoded version of the breast cancer dataset, ready for deeper analysis and compatible with most data visualization tools.
+
+## Files
+
+- `cria_tabela.sql`: creates the source table.
+- `script-final.sql`: applies all the transformations and builds the final table.
+- `datasets/`: original data (`breast-cancer.data`, `breast-cancer.csv`) and the transformed output (`novo_dataset.csv`).
+
+## License
+
+[MIT](LICENSE)
