@@ -1,53 +1,84 @@
-# Breast Cancer Data Analysis: Categorization and Encoding in SQL
+# Categorical Encoding in SQL: Breast Cancer Dataset
 
-This project prepares a breast cancer dataset for analysis using data transformation techniques in SQL. The process is described step by step below.
+Most machine learning models need numbers, but clinical datasets are full of categories: yes/no answers, labels and value ranges. This project prepares a real breast cancer dataset for modeling using only SQL, applying the four most common techniques for categorical data: **binarization**, **label encoding**, **categorization** and **recategorization**.
 
-## Data Extraction and Preparation
+## The dataset
 
-The breast cancer data comes from the [UC Irvine Machine Learning Repository](https://archive.ics.uci.edu/dataset/14/breast+cancer).
+The [Breast Cancer dataset](https://archive.ics.uci.edu/dataset/14/breast+cancer) from the UC Irvine Machine Learning Repository: **286 patients** and **10 attributes**, all categorical except the malignancy degree.
 
-The original `.data` file was converted to `.csv` for easier import, and a header row with the column names was added.
+| Attribute (table column) | Original values | Notes |
+| --- | --- | --- |
+| `classe` (class) | `no-recurrence-events`, `recurrence-events` | 201 vs. 85: imbalanced target |
+| `idade` (age) | 10-year ranges, `20-29` to `70-79` | |
+| `menopausa` (menopause) | `premeno`, `ge40`, `lt40` | |
+| `tamanho_tumor` (tumor size, mm) | 11 ranges, `0-4` to `50-54` | |
+| `inv_nodes` (involved lymph nodes) | ranges, e.g. `0-2`, `3-5` | |
+| `node_caps` | `no`, `yes`, `?` | 8 missing values |
+| `deg_malig` (malignancy degree) | 1, 2, 3 | already numeric |
+| `seio` (breast) | `left`, `right` | |
+| `quadrante` (quadrant) | `left_up`, `left_low`, `right_up`, `right_low`, `central`, `?` | 1 missing value |
+| `irradiando` (irradiated) | `no`, `yes` | |
 
-A table was created in MySQL, with the column names translated into Portuguese.
+The original `.data` file was converted to CSV, a header row was added, and the data was loaded into a MySQL table with the column names in Portuguese (`cria_tabela.sql`).
 
 ## Transformations
 
-1. **Binarization of the 'Classe' (class) column**
+| Column | Technique | Mapping |
+| --- | --- | --- |
+| `classe` | Binarization | `no-recurrence-events` → 0, `recurrence-events` → 1 |
+| `irradiando` | Binarization | `no` → 0, `yes` → 1 |
+| `node_caps` | Label encoding | `no` → 0, `yes` → 1, missing → 2 |
+| `quadrante` | Label encoding | `left_up` → 1, `right_up` → 2, `left_low` → 3, `right_low` → 4, `central` → 5, missing → 0 |
+| `seio` | Categorization | `left` → `E` (*esquerdo*), `right` → `D` (*direito*) |
+| `tamanho_tumor` | Recategorization | 11 ranges grouped into 6 categories (below) |
 
-   Binarization turns categorical variables into binary values (0 or 1). Here, the 'Classe' column was binarized to represent the two breast cancer classes: 'no-recurrence-events' became 0 and 'recurrence-events' became 1. Mapping categories to numbers makes the data easier to interpret and analyze.
+**Why these choices**
 
-2. **Binarization of the 'Irradiando' (irradiated) column**
+- **Binarization** fits columns with exactly two values, and the target `classe` becomes ready for a classifier.
+- **Label encoding with an explicit code for missing values** keeps the 8 + 1 rows with `?` in the dataset instead of dropping them, while still flagging them.
+- **Recategorization** reduces 11 thin size ranges, some with very few patients, to 6 groups that are easier to read and compare:
 
-   In the same way, 'no' values became 0 and 'yes' values became 1. Binary values are often more convenient for algorithms and visualizations.
+| New category | Original ranges (mm) | Patients |
+| --- | --- | --- |
+| Muito Pequeno (very small) | 0-4, 5-9 | 12 |
+| Pequeno (small) | 10-14, 15-19 | 58 |
+| Medio (medium) | 20-24, 25-29 | 104 |
+| Grande (large) | 30-34, 35-39 | 79 |
+| Muito Grande (very large) | 40-44, 45-49 | 25 |
+| Tratamento Urgente (urgent treatment) | 50-54 | 8 |
 
-3. **Label encoding of the 'Node_Caps' column**
+## Result
 
-   Label encoding assigns a numeric label to each category of a variable. 'Node_Caps' has three possible values ('no', 'yes' and missing): 'no' became 0, 'yes' became 1 and missing values became 2. This keeps the information about missing values usable in the analysis.
+`script-final.sql` runs each transformation on its own (so every step can be checked), then combines them in one query and stores the result in a new table, `TB_DADOS2`. The table was exported to `datasets/novo_dataset.csv`:
 
-4. **Categorization of the 'Seio' (breast side) variable**
+```text
+Before:  no-recurrence-events,30-39,premeno,30-34,0-2,no,3,left,left_low,no
+After:   0;"30-39";"premeno";"Grande";"0-2";0;3;"E";3;0
+```
 
-   Categorization assigns labels to categories, usually to simplify a variable. Using a `CASE` clause, 'left' became 'E' (esquerdo) and 'right' became 'D' (direito), making the values clearer for the Portuguese-language table.
+## How to run
 
-5. **Recategorization of the 'Tamanho_Tumor' (tumor size) variable**
+1. Create a schema called `db` in MySQL.
+2. Run `cria_tabela.sql` to create `TB_DADOS`.
+3. Import `datasets/breast-cancer.csv` into `TB_DADOS`, for example with MySQL Workbench's Table Data Import Wizard.
+4. Run `script-final.sql`. It ends by creating `TB_DADOS2` and counting its rows (286).
 
-   Recategorization reorganizes the existing categories of a variable. 'Tamanho_Tumor' originally had 11 categories, which were grouped into 6 new ones: 'muito pequeno' (very small), 'pequeno' (small), 'medio' (medium), 'grande' (large), 'muito grande' (very large) and 'tratamento urgente' (urgent treatment). This makes the column easier to visualize and understand.
+## Next steps
 
-6. **Label encoding of the 'Quadrante' (quadrant) variable**
-
-   As with 'Node_Caps', each quadrant was mapped to a number from 1 to 5, with the central quadrant as 5. Null values were encoded as 0 so they remain part of the analysis.
-
-## Final Query and Export
-
-A final query brings all the transformations together and is used to insert the transformed data into a new table.
-
-That table was then exported to a CSV file: a cleaned and encoded version of the breast cancer dataset, ready for deeper analysis and compatible with most data visualization tools.
+- **One-hot encoding** for `quadrante` and `menopausa`: label encoding implies an order (5 > 1) that quadrants don't have, so one column per category would suit most models better.
+- **Ordinal encoding** for the range columns (`idade`, `inv_nodes`, `tamanho_tumor`), which do have a natural order.
+- A first **classification model** on the encoded table, accounting for the 70/30 class imbalance.
 
 ## Files
 
-- `cria_tabela.sql`: creates the source table.
-- `script-final.sql`: applies all the transformations and builds the final table.
-- `datasets/`: original data (`breast-cancer.data`, `breast-cancer.csv`) and the transformed output (`novo_dataset.csv`).
+| File | Content |
+| --- | --- |
+| `cria_tabela.sql` | Creates the source table `TB_DADOS` |
+| `script-final.sql` | Step-by-step transformations and creation of `TB_DADOS2` |
+| `datasets/breast-cancer.data` | Original UCI file |
+| `datasets/breast-cancer.csv` | Original data as CSV with a header |
+| `datasets/novo_dataset.csv` | Encoded output |
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). The dataset belongs to the UCI Machine Learning Repository and keeps its original license.
