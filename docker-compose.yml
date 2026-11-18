@@ -1,0 +1,31 @@
+# Sobe um MySQL 8.4 que cria TB_DADOS, carrega o CSV original e roda
+# script-final.sql automaticamente, deixando TB_DADOS2 pronta.
+#
+#   docker compose up -d --wait
+#   ./scripts/verifica.sh
+#
+# A senha abaixo é apenas para uso local.
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: db
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./cria_tabela.sql:/docker-entrypoint-initdb.d/01_cria_tabela.sql:ro
+      - ./sql/carga.sql:/docker-entrypoint-initdb.d/02_carga.sql:ro
+      - ./script-final.sql:/docker-entrypoint-initdb.d/03_script_final.sql:ro
+      - ./docker/copia_dados.sh:/docker-entrypoint-initdb.d/00_copia_dados.sh:ro
+      - ./datasets:/datasets:ro
+      - ./tests:/tests:ro
+    healthcheck:
+      # Usa TCP de propósito: durante a inicialização o MySQL roda sem rede,
+      # então o container só fica saudável depois que os scripts terminam.
+      test: ["CMD", "mysql", "-h127.0.0.1", "-uroot", "-proot", "-e", "SELECT 1 FROM db.TB_DADOS2 LIMIT 1"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+      start_period: 10s

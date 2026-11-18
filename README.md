@@ -1,5 +1,10 @@
 # Categorical Encoding in SQL: Breast Cancer Dataset
 
+[![Verify](https://github.com/amarialeitao/CategoricalEncodingSQL/actions/workflows/verify.yml/badge.svg)](https://github.com/amarialeitao/CategoricalEncodingSQL/actions/workflows/verify.yml)
+![MySQL 8.4](https://img.shields.io/badge/MySQL-8.4-4479A1?logo=mysql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Most machine learning models need numbers, but clinical datasets are full of categories: yes/no answers, labels and value ranges. This project prepares a real breast cancer dataset for modeling using only SQL, applying the four most common techniques for categorical data: **binarization**, **label encoding**, **categorization** and **recategorization**.
 
 ## The dataset
@@ -58,9 +63,23 @@ After:   0;"30-39";"premeno";"Grande";"0-2";0;3;"E";3;0
 
 ## How to run
 
+### With Docker (one command)
+
+```bash
+docker compose up -d --wait   # MySQL 8.4: creates TB_DADOS, loads the CSV, runs script-final.sql
+./scripts/verifica.sh         # checks that TB_DADOS2 matches datasets/novo_dataset.csv
+docker compose down           # stop and remove the container
+```
+
+The container is ready only after all the scripts have run. `verifica.sh` loads the exported CSV into a temporary table and compares both tables row by row with `EXCEPT ALL`; it fails if any row differs. The same check runs on every push in [GitHub Actions](https://github.com/amarialeitao/CategoricalEncodingSQL/actions/workflows/verify.yml), so a wrong mapping, like the swapped quadrant codes fixed in an earlier version, cannot go unnoticed.
+
+To explore the tables, connect any SQL client to `localhost:3306` (user `root`, password `root`, local use only).
+
+### Manually (MySQL Workbench)
+
 1. Create a schema called `db` in MySQL.
 2. Run `cria_tabela.sql` to create `TB_DADOS`.
-3. Import `datasets/breast-cancer.csv` into `TB_DADOS`, for example with MySQL Workbench's Table Data Import Wizard.
+3. Import `datasets/breast-cancer.csv` into `TB_DADOS`, for example with MySQL Workbench's Table Data Import Wizard (or run `sql/carga.sql`).
 4. Run `script-final.sql`. It ends by creating `TB_DADOS2` and counting its rows (286).
 
 ## Next steps
@@ -78,6 +97,11 @@ After:   0;"30-39";"premeno";"Grande";"0-2";0;3;"E";3;0
 | `datasets/breast-cancer.data` | Original UCI file |
 | `datasets/breast-cancer.csv` | Original data as CSV with a header |
 | `datasets/novo_dataset.csv` | Encoded output |
+| `sql/carga.sql` | Loads the original CSV into `TB_DADOS` |
+| `tests/verifica_resultado.sql` | Compares `TB_DADOS2` with `novo_dataset.csv` |
+| `scripts/verifica.sh` | Runs the comparison and fails on any difference |
+| `docker-compose.yml` | MySQL 8.4 that runs the whole pipeline on start |
+| `docker/copia_dados.sh` | Copies the CSVs to the folder MySQL can load files from |
 
 ## License
 

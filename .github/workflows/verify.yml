@@ -1,0 +1,23 @@
+name: Verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Reproduce novo_dataset.csv
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start MySQL and run the scripts
+        run: docker compose up -d --wait
+      - name: Compare TB_DADOS2 with the exported dataset
+        run: ./scripts/verifica.sh
+      - name: MySQL logs
+        if: failure()
+        run: docker compose logs mysql
